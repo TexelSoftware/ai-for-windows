@@ -1,0 +1,73 @@
+# Originally at: https://github.com/jllllll/bitsandbytes-windows-webui/blob/main/.github/workflows/build-windows.yml
+name: Build triton Windows Wheel
+
+on:
+  workflow_dispatch:
+    inputs:
+      version:
+        description: 'Short git SHA1 to build. <hash>-windows branch must exist at TexelSoftware/triton'
+        default: 'dced22c'
+        required: true
+        type: string
+  workflow_call:
+    inputs:
+      version:
+        description: 'Short git SHA1 to build. <hash>-windows branch must exist at TexelSoftware/triton'
+        default: 'dced22c'
+        required: true
+        type: string
+
+permissions:
+  contents: write
+
+jobs:
+  compile_cuda_121:
+    # Uses Windows-2022 and Cuda Toolkit >= 11.6 with full version spec as string: "11.6.2"
+    # Uses 11.6 as CPU build target, version must be included to build CPU binaries
+    # See https://github.com/Jimver/cuda-toolkit/blob/master/src/links/windows-links.ts for supported versions
+    name: Compile Cuda 12.1 Code on Windows 2022
+    runs-on: windows-2022
+    strategy:
+      matrix:
+        cuda: ["12.1.0"]
+    defaults:
+      run:
+        shell: pwsh
+    env:
+      CUDAVER: ${{ matrix.cuda }}
+
+    steps:
+      - name: Get Visual Studio Integration
+        uses: Jimver/cuda-toolkit@v0.2.10
+        with:
+          cuda: ${{ matrix.cuda }}
+          method: 'network'
+          sub-packages: '["visual_studio_integration"]'
+
+      - name: Install Visual Studio Integration
+        run: |
+          $x = (dir $env:CUDA_PATH -dir -recurse -depth 2).where({$_.name -eq 'visual_studio_integration'}).fullname
+          $y = (dir $x -dir -recurse).where({$_.name -eq 'MSBuildExtensions'}).fullname + '\*'
+          (gi 'C:\Program Files\Microsoft Visual Studio\2022\Enterprise\MSBuild\Microsoft\VC\*\BuildCustomizations').fullname.foreach({cp $y $_})
+
+      - uses: actions/checkout@v3
+        with:
+          repository: 'TexelSoftware/triton'
+          ref: ${{ format('{0}-windows', inputs.version) }}
+
+      - uses: actions/setup-python@v4
+        with:
+          python-version: "3.11"
+
+      - name: Build Triton Wheel
+        run: |
+          cd python
+          python setup.py bdist_wheel --py-limited-api=cp310
+
+      - name: Upload files to a GitHub release
+        uses: svenstaro/upload-release-action@2.7.0
+        with:
+          file: ./dist/*.whl
+          tag: ${{ format('triton-{0}', inputs.version) }}
+          file_glob: true
+          overwrite: true
