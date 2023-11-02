@@ -62,6 +62,7 @@ jobs:
       - name: Build Triton Wheel
         run: |
           cd python
+          python -m pip install setuptools wheel cmake ninja
           python setup.py bdist_wheel --py-limited-api=cp310
 
       - name: Upload files to a GitHub release
