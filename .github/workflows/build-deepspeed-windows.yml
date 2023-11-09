@@ -35,12 +35,12 @@ jobs:
         shell: pwsh
     env:
       CUDAVER: ${{ matrix.cuda }}
-      TORCH_CUDA_ARCH_LIST: 5.0;5.2;5.3;6.0;6.1;6.2;7.0;7.2;7.5;8.0;8.6;8.7;8.9;9.0
+      TORCH_CUDA_ARCH_LIST: 'All'
       CPP_PM_BOT_CACHE_GITHUB_PASSWORD: ${{ secrets.CPP_PM_BOT_CACHE_GITHUB_PASSWORD }}
       DS_BUILD_AIO: '0'
       DS_BUILD_SPARSE_ATTN: '0'
-      DS_BUILD_OPS: '1'
       CUTLASS_PATH: ${{ github.workspace }}/cutlass
+      DISTUTILS_USE_SDK: '1'
 
     steps:
       - uses: actions/checkout@v3
