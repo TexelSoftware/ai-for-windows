@@ -1,0 +1,109 @@
+# Originally at: https://github.com/jllllll/bitsandbytes-windows-webui/blob/main/.github/workflows/build-windows.yml
+name: Build DeepSpeed Windows Wheel
+
+on:
+  workflow_dispatch:
+    inputs:
+      version:
+        description: 'Short git SHA1 to build. <hash>-windows branch must exist at TexelSoftware/DeepSpeed'
+        default: '8f168c2f'
+        required: true
+        type: string
+  workflow_call:
+    inputs:
+      version:
+        description: 'Short git SHA1 to build. <hash>-windows branch must exist at TexelSoftware/DeepSpeed'
+        default: '8f168c2f'
+        required: true
+        type: string
+
+permissions:
+  contents: write
+
+jobs:
+  compile_cuda_121:
+    # Uses Windows-2022 and Cuda Toolkit >= 11.6 with full version spec as string: "11.6.2"
+    # Uses 11.6 as CPU build target, version must be included to build CPU binaries
+    # See https://github.com/Jimver/cuda-toolkit/blob/master/src/links/windows-links.ts for supported versions
+    name: Compile Cuda 12.1 Code on Windows 2022
+    runs-on: windows-2022
+    strategy:
+      matrix:
+        cuda: ["12.1.0"]
+    defaults:
+      run:
+        shell: pwsh
+    env:
+      CUDAVER: ${{ matrix.cuda }}
+      TORCH_CUDA_ARCH_LIST: 5.0;5.2;5.3;6.0;6.1;6.2;7.0;7.2;7.5;8.0;8.6;8.7;8.9;9.0
+      CPP_PM_BOT_CACHE_GITHUB_PASSWORD: ${{ secrets.CPP_PM_BOT_CACHE_GITHUB_PASSWORD }}
+
+    steps:
+      - name: Get Visual Studio Integration
+        uses: Jimver/cuda-toolkit@v0.2.10
+        with:
+          cuda: ${{ matrix.cuda }}
+          method: 'network'
+          sub-packages: '["visual_studio_integration"]'
+
+      - name: Install Visual Studio Integration
+        run: |
+          $x = (dir $env:CUDA_PATH -dir -recurse -depth 2).where({$_.name -eq 'visual_studio_integration'}).fullname
+          $y = (dir $x -dir -recurse).where({$_.name -eq 'MSBuildExtensions'}).fullname + '\*'
+          (gi 'C:\Program Files\Microsoft Visual Studio\2022\Enterprise\MSBuild\Microsoft\VC\*\BuildCustomizations').fullname.foreach({cp $y $_})
+
+      - uses: actions/checkout@v3
+        with:
+          repository: 'TexelSoftware/DeepSpeed'
+          ref: ${{ format('{0}-windows', inputs.version) }}
+
+      - uses: actions/setup-python@v4
+        with:
+          python-version: "3.11"
+
+      - name: Get current date
+        id: date
+        run: echo "::set-output name=date::$(date +'%Y-%m-%d')"
+
+      - uses: ilammy/msvc-dev-cmd@v1
+
+      - uses: robinraju/release-downloader@v1.8
+        with:
+          repository: "TexelSoftware/ai-for-windows"
+          tag: "${{ steps.date.outputs.date }}"
+          fileName: "triton*win_amd64.whl"
+          out-file-path: "./"
+
+      - name: Install Triton Wheel
+        run: |
+          python -m pip install triton*.whl
+          del /q triton*.whl
+
+      - name: Checkout NVIDIA cutlass
+        uses: actions/checkout@v3
+        with:
+          repository: 'NVIDIA/cutlass'
+          ref: 'v3.2.1'
+          path: 'cutlass'
+
+      - name: Install PyTorch for CUDA 12.1
+        run: |
+          python -m pip install torch torchvision torchaudio --index-url https://download.pytorch.org/whl/cu121
+
+      - name: Build DeepSpeed Wheel
+        env:
+          DS_BUILD_AIO: '0'
+          DS_BUILD_SPARSE_ATTN: '0'
+          DS_BUILD_OPS: '1'
+          CUTLASS_PATH: $GITHUB_WORKSPACE/cutlass
+        run: |
+          python -m pip install setuptools wheel cmake ninja
+          python setup.py bdist_wheel --py-limited-api=cp310
+
+      - name: Upload files to a GitHub release
+        uses: svenstaro/upload-release-action@2.7.0
+        with:
+          file: ./dist/*.whl
+          tag: ${{ steps.date.outputs.date }}
+          file_glob: true
+          overwrite: true
