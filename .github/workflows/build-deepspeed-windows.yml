@@ -64,7 +64,6 @@ jobs:
       - name: Install Triton Wheel
         run: |
           python -m pip install --find-links=. triton
-          del /q triton*.whl
 
       - name: Checkout NVIDIA cutlass
         uses: actions/checkout@v3
