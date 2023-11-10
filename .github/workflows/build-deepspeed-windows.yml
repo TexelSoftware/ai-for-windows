@@ -62,7 +62,7 @@ jobs:
       - uses: robinraju/release-downloader@v1.8
         with:
           repository: "TexelSoftware/ai-for-windows"
-          tag: "${{ steps.date.outputs.date }}"
+          tag: "2023-11-10" #${{ steps.date.outputs.date }}"
           fileName: "triton*win_amd64.whl"
           out-file-path: "./"
 
