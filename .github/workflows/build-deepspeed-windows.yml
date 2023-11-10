@@ -35,7 +35,7 @@ jobs:
         shell: pwsh
     env:
       CUDAVER: ${{ matrix.cuda }}
-      TORCH_CUDA_ARCH_LIST: 5.0;5.2;5.3;6.0;6.1;6.2;7.0;7.2;7.5;8.0;8.6;8.7;8.9;9.0
+      TORCH_CUDA_ARCH_LIST: 7.0;7.5;8.0
       CPP_PM_BOT_CACHE_GITHUB_PASSWORD: ${{ secrets.CPP_PM_BOT_CACHE_GITHUB_PASSWORD }}
       DS_BUILD_AIO: 0
       DS_BUILD_SPARSE_ATTN: 0
@@ -48,6 +48,10 @@ jobs:
           repository: 'TexelSoftware/DeepSpeed'
           submodules: 'true'
           ref: ${{ format('{0}-windows', inputs.version) }}
+
+      - name: List contents test
+        run: |
+          dir /al DeepSpeed\ops
 
       - uses: actions/setup-python@v4
         with:
