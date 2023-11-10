@@ -46,12 +46,11 @@ jobs:
       - uses: actions/checkout@v3
         with:
           repository: 'TexelSoftware/DeepSpeed'
-          submodules: 'true'
           ref: ${{ format('{0}-windows', inputs.version) }}
 
       - name: List contents test
-        run: |
-          dir /al DeepSpeed\ops
+        shell: cmd
+        run: dir /al deepspeed\ops
 
       - uses: actions/setup-python@v4
         with:
