@@ -100,8 +100,8 @@ jobs:
 
       - name: Add CUDA_PATH to path
         run: |
-          Add-Content $env:GITHUB_PATH "${{steps.cuda-toolkit.outputs.CUDA_PATH}}\bin"
-          Add-Content $env:CUDA_HOME "${{steps.cuda-toolkit.outputs.CUDA_PATH}}"
+          echo "${{steps.cuda-toolkit.outputs.CUDA_PATH}}\bin" | Out-File -FilePath $env:GITHUB_PATH -Encoding utf8 -Append
+          echo "CUDA_HOME=${{steps.cuda-toolkit.outputs.CUDA_PATH}}" | Out-File -FilePath $env:GITHUB_ENV -Encoding utf8 -Append
 
       - name: Build DeepSpeed Wheel
         run: |
