@@ -102,13 +102,15 @@ jobs:
         run: |
           Add-Content -Path $env:GITHUB_PATH -Value "$env:CUDA_PATH\bin"
           Add-Content -Path $env:GITHUB_ENV -Value "CUDA_HOME=$env:CUDA_PATH"
-      
+          New-Item -ItemType SymbolicLink -Path "$env:CUDA_PATH\bin\nvcc" -Target "$env:CUDA_PATH\bin\nvcc.exe"
+
       - name: Check CUDA_PATH
-        run:
+        run: |
           echo $env:GITHUB_PATH
           echo $env:GITHUB_ENV
           echo $env:PATH
-          
+          nvcc --version
+
       - name: Build DeepSpeed Wheel
         run: |
           python -m pip install setuptools wheel cmake ninja py-cpuinfo
