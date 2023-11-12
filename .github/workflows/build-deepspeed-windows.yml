@@ -102,6 +102,8 @@ jobs:
         run: |
           Add-Content -Path $env:GITHUB_PATH -Value "$env:CUDA_PATH\bin"
           Add-Content -Path $env:GITHUB_ENV -Value "CUDA_HOME=$env:CUDA_PATH"
+          dir "$env:CUDA_PATH"
+          dir "$env:CUDA_PATH\bin"
           New-Item -ItemType SymbolicLink -Path "$env:CUDA_PATH\bin\nvcc" -Target "$env:CUDA_PATH\bin\nvcc.exe"
 
       - name: Check CUDA_PATH
