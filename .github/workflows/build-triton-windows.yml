@@ -6,14 +6,14 @@ on:
     inputs:
       version:
         description: 'Short git SHA1 to build. <hash>-windows branch must exist at TexelSoftware/triton'
-        default: 'dced22c'
+        default: '2e38de5b'
         required: true
         type: string
   workflow_call:
     inputs:
       version:
         description: 'Short git SHA1 to build. <hash>-windows branch must exist at TexelSoftware/triton'
-        default: 'dced22c'
+        default: '2e38de5b'
         required: true
         type: string
 
@@ -36,6 +36,7 @@ jobs:
     env:
       CUDAVER: ${{ matrix.cuda }}
       CPP_PM_BOT_CACHE_GITHUB_PASSWORD: ${{ secrets.CPP_PM_BOT_CACHE_GITHUB_PASSWORD }}
+      TRITON_WHEEL_VERSION_SUFFIX: +${{ inputs.version }}
 
     steps:
       - name: Get Visual Studio Integration
