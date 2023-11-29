@@ -37,6 +37,7 @@ jobs:
       CUDAVER: ${{ matrix.cuda }}
       CPP_PM_BOT_CACHE_GITHUB_PASSWORD: ${{ secrets.CPP_PM_BOT_CACHE_GITHUB_PASSWORD }}
       TRITON_WHEEL_VERSION_SUFFIX: +${{ inputs.version }}
+      TRITON_BUILD_WITH_HUNTER: "ON"
 
     steps:
       - name: Get Visual Studio Integration
