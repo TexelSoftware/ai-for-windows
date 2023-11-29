@@ -73,7 +73,7 @@ jobs:
         run: |
           cd python
           python -m pip install setuptools wheel cmake ninja requests gitpython
-          python setup.py bdist_wheel --py-limited-api=cp310
+          python setup.py bdist_wheel --py-limited-api=cp32
 
       - name: Get current date
         id: date
